@@ -1,11 +1,11 @@
-const socket = io();
+const evtSource = new EventSource('/events');
 let state = null;
 let selected = null;
 
-socket.on('state', (gameState) => {
-    state = gameState;
+evtSource.onmessage = (e) => {
+    state = JSON.parse(e.data);
     renderBoard();
-});
+};
 
 function renderBoard() {
     const boardDiv = document.getElementById('board');
@@ -53,7 +53,11 @@ function onSquareClick(e) {
     const row = parseInt(e.currentTarget.dataset.row);
     const col = parseInt(e.currentTarget.dataset.col);
     if (selected) {
-        socket.emit('move', { from: selected, to: { row, col } });
+        fetch('/move', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ from: selected, to: { row, col } })
+        });
         selected = null;
     } else {
         selected = { row, col };
